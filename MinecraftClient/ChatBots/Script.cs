@@ -7,6 +7,7 @@ using Microsoft.CSharp;
 using System.CodeDom.Compiler;
 using System.Reflection;
 using System.Diagnostics;
+using Timer = System.Timers.Timer;
 
 namespace MinecraftClient.ChatBots
 {
@@ -196,17 +197,35 @@ namespace MinecraftClient.ChatBots
                             if (instruction_line[0] != '#' && instruction_line[0] != '/' && instruction_line[1] != '/')
                             {
                                 instruction_line = Settings.ExpandVars(instruction_line, localVars);
-                                string instruction_name = instruction_line.Split(' ')[0];
+                                var splitted_line = instruction_line.Split(' ');
+                                string instruction_name = splitted_line[0];
+                                int ticks;
                                 switch (instruction_name.ToLower())
                                 {
                                     case "wait":
-                                        int ticks = 10;
+                                        ticks = 1;
                                         try
                                         {
-                                            ticks = Convert.ToInt32(instruction_line.Substring(5, instruction_line.Length - 5));
+                                            ticks = Convert.ToInt32(splitted_line[1].Replace(" seconds", ""));
                                         }
                                         catch { }
-                                        sleepticks = ticks;
+                                        sleepticks = ticks * 10;
+                                        break;
+                                    case "loop":
+                                        ticks = Convert.ToInt32(splitted_line[1]);
+                                        instruction_line = "send " + splitted_line[2];
+
+                                        var timer = new Timer(ticks * 1000);
+                                        timer.Elapsed += (sender, e) =>
+                                        {
+                                            if (!PerformInternalCommand(instruction_line))
+                                            {
+                                                timer.Stop();
+                                            }
+                                            else { LogToConsole(instruction_line); }
+                                        };
+                                        timer.Start();
+                                        Update();
                                         break;
                                     default:
                                         if (!PerformInternalCommand(instruction_line))
