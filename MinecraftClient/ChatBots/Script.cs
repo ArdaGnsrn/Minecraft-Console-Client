@@ -197,7 +197,7 @@ namespace MinecraftClient.ChatBots
                             if (instruction_line[0] != '#' && instruction_line[0] != '/' && instruction_line[1] != '/')
                             {
                                 instruction_line = Settings.ExpandVars(instruction_line, localVars);
-                                var splitted_line = instruction_line.Split(' ');
+                                var splitted_line = instruction_line.Split(new char[] { ' ' }, 3);
                                 string instruction_name = splitted_line[0];
                                 int ticks;
                                 switch (instruction_name.ToLower())
